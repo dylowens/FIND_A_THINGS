@@ -1,10 +1,13 @@
 import axios from 'axios';
 
 const fetchTweets = async () => {
-  const BEARER_TOKEN = 'YOUR_BEARER_TOKEN'; // Replace with your actual Bearer Token
+  const BEARER_TOKEN =
+    'AAAAAAAAAAAAAAAAAAAAAMoouAEAAAAAOrJVlnbLyknQ6U3atPB6VozPBjg%3D9CaSVn8RHPzsKdnbNxQPygAwqSnuX1MsrM4eqgSrcHKBCx3Okp'; // Replace with your actual Bearer Token
   const endpoint = 'https://api.twitter.com/2/tweets/search/recent';
   const query = 'geocode:37.8715,-122.2730,15km -is:retweet has:geo';
-  const startTime = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString();
+  const startTime = new Date(
+    new Date().setDate(new Date().getDate() - 7),
+  ).toISOString();
   const maxResults = 10; // Fetch only 10 tweets for initial test
 
   try {
@@ -27,7 +30,6 @@ const fetchTweets = async () => {
     });
 
     return tweets;
-
   } catch (error) {
     console.error('Error fetching tweets:', error);
   }
