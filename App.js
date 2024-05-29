@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, PermissionsAndroid, Platform, Alert, Linking } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import React, {useEffect, useState} from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  PermissionsAndroid,
+  Platform,
+  Alert,
+  Linking,
+} from 'react-native';
+import MapView, {Marker} from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import axios from 'axios';
 
@@ -24,7 +32,7 @@ const App = () => {
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
-          }
+          },
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
           console.log('Location permission denied');
@@ -33,8 +41,8 @@ const App = () => {
       }
 
       Geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
+        position => {
+          const {latitude, longitude} = position.coords;
           setRegion({
             ...region,
             latitude,
@@ -42,15 +50,15 @@ const App = () => {
           });
           fetchTrendingPlaces(latitude, longitude);
         },
-        (error) => {
+        error => {
           console.log(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     };
 
     requestLocationPermission();
-  }, []);
+  }, [region]);
 
   const fetchTrendingPlaces = async (latitude, longitude) => {
     try {
@@ -60,10 +68,10 @@ const App = () => {
           headers: {
             Authorization: `Bearer YOUR_BEARER_TOKEN`,
           },
-        }
+        },
       );
       const tweets = response.data.statuses;
-      const newMarkers = tweets.map((tweet) => ({
+      const newMarkers = tweets.map(tweet => ({
         id: tweet.id,
         latitude: tweet.geo.coordinates[0],
         longitude: tweet.geo.coordinates[1],
@@ -75,18 +83,18 @@ const App = () => {
     }
   };
 
-  const onMarkerPress = (marker) => {
+  const onMarkerPress = marker => {
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${marker.latitude},${marker.longitude}`;
     const appleMapsUrl = `http://maps.apple.com/?daddr=${marker.latitude},${marker.longitude}`;
 
     Alert.alert(
-      "Trending Place",
+      'Trending Place',
       marker.title,
       [
         {
-          text: "Navigate",
+          text: 'Navigate',
           onPress: () => {
-            if (Platform.OS === "ios") {
+            if (Platform.OS === 'ios') {
               Linking.openURL(appleMapsUrl);
             } else {
               Linking.openURL(googleMapsUrl);
@@ -94,11 +102,11 @@ const App = () => {
           },
         },
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
       ],
-      { cancelable: true }
+      {cancelable: true},
     );
   };
 
@@ -107,9 +115,8 @@ const App = () => {
       <MapView
         style={styles.map}
         region={region}
-        onRegionChangeComplete={setRegion}
-      >
-        {markers.map((marker) => (
+        onRegionChangeComplete={setRegion}>
+        {markers.map(marker => (
           <Marker
             key={marker.id}
             coordinate={{
