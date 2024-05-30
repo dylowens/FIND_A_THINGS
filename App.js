@@ -7,18 +7,22 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import MapView, {Marker} from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
-import {fetchTrendingTweets} from './services/twitterService';
+import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for marker icons not showing
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
 
 const App = () => {
-  const [region, setRegion] = useState({
-    latitude: 37.7749,
-    longitude: -122.4194,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
-  const [markers, setMarkers] = useState([]);
+  const [position, setPosition] = useState([37.7749, -122.4194]);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -42,12 +46,7 @@ const App = () => {
       Geolocation.getCurrentPosition(
         position => {
           const {latitude, longitude} = position.coords;
-          setRegion({
-            ...region,
-            latitude,
-            longitude,
-          });
-          fetchTweets(latitude, longitude);
+          setPosition([latitude, longitude]);
         },
         error => {
           console.log(error);
@@ -57,30 +56,15 @@ const App = () => {
     };
 
     requestLocationPermission();
-  }, [region]);
+  }, []);
 
-  const fetchTweets = async (latitude, longitude) => {
-    try {
-      const tweets = await fetchTrendingTweets(latitude, longitude, 10);
-      const newMarkers = tweets.map(tweet => ({
-        id: tweet.id,
-        latitude: tweet.geo.coordinates[0],
-        longitude: tweet.geo.coordinates[1],
-        title: tweet.text,
-      }));
-      setMarkers(newMarkers);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const onMarkerPress = marker => {
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${marker.latitude},${marker.longitude}`;
-    const appleMapsUrl = `http://maps.apple.com/?daddr=${marker.latitude},${marker.longitude}`;
+  const onMarkerPress = () => {
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${position[0]},${position[1]}`;
+    const appleMapsUrl = `http://maps.apple.com/?daddr=${position[0]},${position[1]}`;
 
     Alert.alert(
-      'Trending Place',
-      marker.title,
+      'Your Location',
+      'Navigate to your location',
       [
         {
           text: 'Navigate',
@@ -103,22 +87,15 @@ const App = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <MapView
-        style={styles.map}
-        region={region}
-        onRegionChangeComplete={setRegion}>
-        {markers.map(marker => (
-          <Marker
-            key={marker.id}
-            coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude,
-            }}
-            title={marker.title}
-            onPress={() => onMarkerPress(marker)}
-          />
-        ))}
-      </MapView>
+      <MapContainer center={position} zoom={15} style={styles.map}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        <Marker position={position} eventHandlers={{click: onMarkerPress}}>
+          <Popup>Your Location</Popup>
+        </Marker>
+      </MapContainer>
     </SafeAreaView>
   );
 };
@@ -128,7 +105,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    height: '100vh', // Ensure the map takes up the full height of the viewport
+    width: '100vw', // Ensure the map takes up the full width of the viewport
   },
 });
 
